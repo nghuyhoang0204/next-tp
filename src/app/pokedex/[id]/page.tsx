@@ -24,6 +24,24 @@ interface PokemonDetails {
     evolutions: Evolution[];
 }
 
+// Background colors for types
+const typeColors: Record<string, string> = {
+    Feu: 'bg-red-600',
+    Eau: 'bg-blue-500',
+    Plante: 'bg-green-500',
+    Électrik: 'bg-yellow-500',
+    Poison: 'bg-purple-500',
+    Vol: 'bg-indigo-400',
+    Psychic: 'bg-pink-500',
+    Ice: 'bg-cyan-400',
+    Dragon: 'bg-orange-600',
+    Dark: 'bg-gray-800',
+    Fée: 'bg-pink-300',
+    Normal: 'bg-gray-200',
+    Sol: 'bg-yellow-600',
+    Insecte: 'bg-green-400',
+};
+
 const PokemonDetailsPage = () => {
     const params = useParams();
     const router = useRouter();
@@ -51,7 +69,7 @@ const PokemonDetailsPage = () => {
     }
 
     return (
-        <div className="p-8">
+        <div className="p-8 bg-gradient-to-b from-blue-100 via-purple-100 to-white dark:bg-gray-900 min-h-screen">
             <button
                 onClick={() => router.push('/')}
                 className="mb-8 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md transition"
@@ -66,23 +84,33 @@ const PokemonDetailsPage = () => {
                     <img
                         src={pokemon.image}
                         alt={pokemon.name}
-                        className="w-64 h-64 mx-auto rounded-lg border border-gray-300"
+                        className="w-64 h-64 mx-auto rounded-lg border border-gray-300 shadow-lg"
                     />
+                    <div className="mt-4 flex gap-2 justify-center">
+                        {pokemon.types.map((typeObj, index) => (
+                            <span
+                                key={index}
+                                className={`px-3 py-1 rounded-full font-semibold ${typeColors[typeObj.name] || 'bg-gray-300 text-black'}`}
+                            >
+                                {typeObj.name}
+                            </span>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Right Column: Statistics */}
                 <div className="flex-1">
-                    <h2 className="text-2xl font-bold mb-6">Statistiques</h2>
-                    <div className="grid grid-cols-2 gap-4">
+                    <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Statistiques</h2>
+                    <div className="grid grid-cols-2 gap-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
                         {pokemon.stats ? (
                             Object.entries(pokemon.stats).map(([statName, statValue]) => (
                                 <React.Fragment key={statName}>
-                                    <p className="capitalize font-semibold text-gray-600">{statName}</p>
-                                    <p className="font-medium">{statValue}</p>
+                                    <p className="capitalize font-semibold text-gray-600 dark:text-gray-300">{statName}</p>
+                                    <p className="font-medium text-black dark:text-white">{statValue}</p>
                                 </React.Fragment>
                             ))
                         ) : (
-                            <p className="col-span-2 text-center">Aucune statistique disponible</p>
+                            <p className="col-span-2 text-center text-gray-600 dark:text-gray-300">Aucune statistique disponible</p>
                         )}
                     </div>
                 </div>
