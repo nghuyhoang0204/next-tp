@@ -19,7 +19,7 @@ interface PokemonDetails {
     _id: string;
     name: string;
     image: string;
-    stats: { [key: string]: number }; // Stats as an object with key-value pairs
+    stats: { [key: string]: number };
     types: { name: string; image: string }[];
     evolutions: Evolution[];
 }
@@ -47,35 +47,42 @@ const PokemonDetailsPage = () => {
     }, [params.id, router]);
 
     if (!pokemon) {
-        return <p style={{ textAlign: 'center' }}>Chargement...</p>;
+        return <p className="text-center text-lg font-semibold">Chargement...</p>;
     }
 
     return (
-        <div style={{ padding: '20px' }}>
-            <button onClick={() => router.push('/')} style={{ marginBottom: '20px', padding: '10px 20px', cursor: 'pointer' }}>
+        <div className="p-8">
+            <button
+                onClick={() => router.push('/')}
+                className="mb-8 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md transition"
+            >
                 Retour
             </button>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '40px' }}>
+            <div className="flex flex-col md:flex-row gap-8">
                 {/* Left Column: Image and name */}
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                    <h1 style={{ textTransform: 'capitalize', marginBottom: '20px' }}>{pokemon.name}</h1>
-                    <img src={pokemon.image} alt={pokemon.name} style={{ width: '250px', height: '250px', borderRadius: '12px' }} />
+                <div className="flex-1 text-center">
+                    <h1 className="capitalize text-3xl font-bold mb-6">{pokemon.name}</h1>
+                    <img
+                        src={pokemon.image}
+                        alt={pokemon.name}
+                        className="w-64 h-64 mx-auto rounded-lg border border-gray-300"
+                    />
                 </div>
 
                 {/* Right Column: Statistics */}
-                <div style={{ flex: 1 }}>
-                    <h2 style={{ marginBottom: '20px' }}>Statistiques</h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="flex-1">
+                    <h2 className="text-2xl font-bold mb-6">Statistiques</h2>
+                    <div className="grid grid-cols-2 gap-4">
                         {pokemon.stats ? (
                             Object.entries(pokemon.stats).map(([statName, statValue]) => (
                                 <React.Fragment key={statName}>
-                                    <p style={{ textTransform: 'capitalize', fontWeight: 'bold' }}>{statName}</p>
-                                    <p>{statValue}</p>
+                                    <p className="capitalize font-semibold text-gray-600">{statName}</p>
+                                    <p className="font-medium">{statValue}</p>
                                 </React.Fragment>
                             ))
                         ) : (
-                            <p>Aucune statistique disponible</p>
+                            <p className="col-span-2 text-center">Aucune statistique disponible</p>
                         )}
                     </div>
                 </div>

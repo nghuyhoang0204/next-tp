@@ -3,13 +3,41 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+interface PokemonType {
+  id: number;
+  name: string;
+  image: string; // URL to the image icon
+}
+
 interface Pokemon {
   id: number;
   pokedexId: number;
   name: string;
   image: string;
-  types: { id: number; name: string; image: string }[] | undefined;
+  types: PokemonType[] | undefined;
 }
+
+// Map type names to corresponding icons or emoji
+const typeIcons: Record<string, string> = {
+  Fire: '🔥',
+  Water: '💧',
+  Grass: '🌿',
+  Electric: '⚡',
+  Poison: '☠️',
+  Flying: '🕊️',
+  Psychic: '🔮',
+  Ice: '❄️',
+  Dragon: '🐉',
+  Dark: '🌑',
+  Fairy: '✨',
+  Normal: '⭐',
+  Fighting: '🥊',
+  Rock: '🪨',
+  Ground: '🌍',
+  Bug: '🐛',
+  Ghost: '👻',
+  Steel: '⚙️',
+};
 
 const PokemonListPage = () => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
@@ -20,7 +48,6 @@ const PokemonListPage = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const router = useRouter();
 
-  // Récupération des Pokémons
   const fetchPokemons = async () => {
     setLoading(true);
     try {
@@ -44,7 +71,6 @@ const PokemonListPage = () => {
     fetchPokemons();
   }, [offset]);
 
-  // Gestion du scroll infini
   useEffect(() => {
     const handleScroll = () => {
       if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 500 && !loading) {
@@ -56,7 +82,6 @@ const PokemonListPage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loading]);
 
-  // Types uniques pour le filtre
   const uniqueTypes = Array.from(
     new Set(pokemons.flatMap((pokemon) => pokemon.types?.map((typeObj) => typeObj.name) || []))
   );
@@ -69,17 +94,21 @@ const PokemonListPage = () => {
   });
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Pokedex</h1>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+    <div className="p-6">
+      <h1 className="text-center text-4xl font-bold mb-6 text-gray-800 dark:text-gray-200">Pokedex</h1>
+      <div className="flex justify-center gap-4 mb-8">
         <input
           type="text"
           placeholder="Rechercher par nom"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ padding: '10px', width: '200px' }}
+          className="p-2 border border-gray-300 rounded-lg w-64 dark:bg-gray-800 dark:text-gray-200"
         />
-        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ padding: '10px' }}>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="p-2 border border-gray-300 rounded-lg dark:bg-gray-800 dark:text-gray-200"
+        >
           <option value="">Tous les types</option>
           {uniqueTypes.map((type) => (
             <option key={type} value={type}>
@@ -89,36 +118,35 @@ const PokemonListPage = () => {
         </select>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredPokemons.map((pokemon, index) => (
           <div
             key={`${pokemon.pokedexId}-${pokemon.id}-${index}`}
             onClick={() => router.push(`/pokedex/${pokemon.id}`)}
-            style={{
-              border: '1px solid #ddd',
-              padding: '15px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              backgroundColor: '#fff',
-              maxWidth: '200px',
-              textAlign: 'center',
-              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-            }}
+            className="border border-gray-300 rounded-lg shadow-md bg-white dark:bg-gray-800 dark:border-gray-700 p-4 cursor-pointer hover:scale-105 hover:shadow-lg transition-transform"
           >
-            <h3 style={{ textTransform: 'capitalize' }}>{pokemon.name}</h3>
-            <img src={pokemon.image} alt={pokemon.name} style={{ width: '120px', height: '120px' }} />
-            <p>ID: #{pokemon.pokedexId}</p>
-            <p>
-              Type(s) :{' '}
+            <h3 className="text-xl font-semibold capitalize text-center mb-3">{pokemon.name}</h3>
+            <img src={pokemon.image} alt={pokemon.name} className="w-32 h-32 mx-auto mb-3 rounded-lg" />
+            <p className="text-center text-gray-600 dark:text-gray-400">ID: #{pokemon.pokedexId}</p>
+            <div className="text-center mt-2 text-gray-600 dark:text-gray-400 flex gap-2 justify-center">
               {pokemon.types
-                ? pokemon.types.map((typeObj) => typeObj.name).join(', ')
+                ? pokemon.types.map((typeObj) => (
+                  <span key={typeObj.id} className="flex items-center gap-2">
+                    <img
+                      src={typeObj.image || ''}
+                      alt={typeObj.name}
+                      className="w-5 h-5 inline-block"
+                    />
+                    {typeIcons[typeObj.name] || typeObj.name}
+                  </span>
+                ))
                 : 'Inconnu'}
-            </p>
+            </div>
           </div>
         ))}
       </div>
 
-      {loading && <p style={{ textAlign: 'center' }}>Chargement...</p>}
+      {loading && <p className="text-center text-lg font-semibold mt-6">Chargement...</p>}
     </div>
   );
 };
