@@ -1,101 +1,115 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface Pokemon {
+  id: number;
+  pokedexId: number;
+  name: string;
+  image: string;
+  types: string[];
+}
+
+const PokemonListPage = () => {
+  const [pokemons, setPokemons] = useState<Pokemon[]>([]);
+  const [offset, setOffset] = useState(0);
+  const [limit, setLimit] = useState(50); // Par défaut : 50
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const router = useRouter();
+
+  // Récupération des Pokémons
+  const fetchPokemons = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`https://nestjs-pokedex-api.vercel.app/pokemons?offset=${offset}&limit=${limit}`);
+      const data = await response.json();
+      console.log("Data fetched:", data); // Affiche les données
+
+      // Vérifiez ici que `data` est bien un tableau et ajoutez-le au state
+      if (Array.isArray(data)) {
+        setPokemons((prev) => [...prev, ...data]); // Ajout des Pokémons au state
+      } else {
+        console.error('Data format is incorrect:', data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch pokemons:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPokemons();
+  }, [offset]);
+
+  // Gestion du scroll infini
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 500 && !loading) {
+        setOffset((prev) => prev + limit);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loading]);
+
+  const filteredPokemons = pokemons.filter((pokemon) => {
+    const matchesName = pokemon.name.toLowerCase().includes(search.toLowerCase());
+    const matchesType = typeFilter ? pokemon.types.includes(typeFilter) : true;
+    return matchesName && matchesType;
+  });
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div style={{ padding: '20px' }}>
+      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Pokedex</h1>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Rechercher par nom"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ padding: '10px', width: '200px' }}
         />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ padding: '10px' }}>
+          <option value="">Tous les types</option>
+          <option value="Fire">Feu</option>
+          <option value="Water">Eau</option>
+          <option value="Grass">Plante</option>
+          <option value="Electric">Électrique</option>
+        </select>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
+        {filteredPokemons.map((pokemon, index) => (
+          <div
+            key={`${pokemon.pokedexId}-${pokemon.id}-${index}`} // Ajout de l'index pour garantir l'unicité
+            onClick={() => router.push(`/pokedex/${pokemon.id}`)}
+            style={{
+              border: '1px solid #ddd',
+              padding: '15px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              backgroundColor: '#fff',
+              maxWidth: '200px',
+              textAlign: 'center',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <h3 style={{ textTransform: 'capitalize' }}>{pokemon.name}</h3>
+            <img src={pokemon.image} alt={pokemon.name} style={{ width: '120px', height: '120px' }} />
+            <p>ID: #{pokemon.pokedexId}</p>
+            <p>Type(s) : {pokemon.types.join(', ')}</p>
+          </div>
+        ))}
+      </div>
+
+      {loading && <p style={{ textAlign: 'center' }}>Chargement...</p>}
     </div>
   );
-}
+};
+
+export default PokemonListPage;
