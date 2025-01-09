@@ -17,6 +17,7 @@ interface Pokemon {
   types: PokemonType[] | undefined;
 }
 
+// Map type names to corresponding colors
 const typeColors: Record<string, string> = {
   Feu: 'bg-red-600',
   Eau: 'bg-blue-500',
@@ -37,23 +38,21 @@ const typeColors: Record<string, string> = {
 const PokemonListPage = () => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
   const [offset, setOffset] = useState(0);
-  const [limit, setLimit] = useState(50); // Default to 50 Pokémon
+  const [limit, setLimit] = useState(50);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [page, setPage] = useState(1); // Pagination
   const router = useRouter();
 
   const fetchPokemons = async () => {
     setLoading(true);
     try {
-      const apiUrl = `https://nestjs-pokedex-api.vercel.app/pokemons?offset=${(page - 1) * limit}&limit=${limit}&name=${search}&typeId=${typeFilter}`;
-      const response = await fetch(apiUrl);
+      const response = await fetch(`https://nestjs-pokedex-api.vercel.app/pokemons?offset=${offset}&limit=${limit}`);
       const data = await response.json();
       console.log('Data fetched:', data);
 
       if (Array.isArray(data)) {
-        setPokemons(data); // Reset Pokémon list on page/limit change
+        setPokemons(data);
       } else {
         console.error('Data format is incorrect:', data);
       }
@@ -66,14 +65,21 @@ const PokemonListPage = () => {
 
   useEffect(() => {
     fetchPokemons();
-  }, [page, limit, search, typeFilter]); // Re-fetch data on page, limit, search, or type change
+  }, [offset, limit, search, typeFilter]);
 
-  const handleNextPage = () => setPage((prev) => prev + 1);
-  const handlePrevPage = () => setPage((prev) => Math.max(prev - 1, 1));
+  const handleNextPage = () => setOffset((prev) => prev + limit);
+  const handlePrevPage = () => setOffset((prev) => Math.max(prev - limit, 0));
 
   const uniqueTypes = Array.from(
     new Set(pokemons.flatMap((pokemon) => pokemon.types?.map((typeObj) => typeObj.name) || []))
   );
+
+  const filteredPokemons = pokemons.filter((pokemon) => {
+    const pokemonTypes = (pokemon.types || []).map((typeObj) => typeObj.name.toLowerCase());
+    const matchesName = pokemon.name.toLowerCase().includes(search.toLowerCase());
+    const matchesType = typeFilter ? pokemonTypes.includes(typeFilter.toLowerCase()) : true;
+    return matchesName && matchesType;
+  });
 
   return (
     <div className="p-6 bg-gradient-to-b from-blue-100 via-purple-100 to-white dark:bg-gray-900 min-h-screen">
@@ -111,12 +117,12 @@ const PokemonListPage = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {pokemons.map((pokemon) => {
+        {filteredPokemons.map((pokemon, index) => {
           const bgColor = pokemon.types ? typeColors[pokemon.types[0].name] || 'bg-gray-200' : 'bg-gray-200';
 
           return (
             <div
-              key={pokemon.id}
+              key={`${pokemon.pokedexId}-${pokemon.id}-${index}`}
               onClick={() => router.push(`/pokedex/${pokemon.id}`)}
               className={`border rounded-lg shadow-md p-4 cursor-pointer hover:scale-105 hover:shadow-lg transition-transform ${bgColor}`}
             >
@@ -142,12 +148,12 @@ const PokemonListPage = () => {
       <div className="mt-8 flex justify-center gap-4">
         <button
           onClick={handlePrevPage}
-          disabled={page === 1}
+          disabled={offset === 0}
           className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
           Précédent
         </button>
-        <span className="font-semibold">Page {page}</span>
+        <span className="font-semibold">Page {Math.ceil(offset / limit) + 1}</span>
         <button
           onClick={handleNextPage}
           className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
